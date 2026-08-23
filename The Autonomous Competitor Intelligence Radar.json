@@ -1,0 +1,730 @@
+{
+  "name": "The Autonomous Competitor Intelligence Radar",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "id": "539e9ecb-f720-4a9b-9f02-a5d624eea752",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -688,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://r.jina.ai/http://apple.com",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "id": "91565245-9ccb-4c00-8c8a-09db8849ee81",
+      "name": "Company A",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -448,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://r.jina.ai/http://www.anthropic.com",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "id": "a0c17775-f753-4ab8-9298-43d9532c6e65",
+      "name": "Company B",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -448,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://r.jina.ai/http://techcrunch.com",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "id": "0b1d44cd-5e91-45ec-8d81-f90b28842c3c",
+      "name": "Company C",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -448,
+        464
+      ]
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "id": "af3559b0-da6e-421d-afaa-b1d6af3434a6",
+      "name": "Merge",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -160,
+        272
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyze this merged competitor data and return the structured JSON as instructed:\n\n{{ $json.data }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are a competitor intelligence analyst.\n\nYou will receive raw scraped webpage content from multiple competitor companies, merged together in one input.\n\nTASK:\nAnalyze the content and identify the single most notable change or update — a new product launch, pricing change, campaign, feature release, or similar. If multiple companies have updates, pick the most significant one overall.\n\nOUTPUT RULES (follow exactly):\n1. Return ONLY a single JSON object. Nothing else.\n2. Do NOT include markdown code fences (no ``` symbols).\n3. Do NOT include any explanation, commentary, greeting, or text before or after the JSON.\n4. Do NOT return an array. Return exactly ONE object.\n5. The response must start with the character { and end with the character }.\n6. All four fields are required and must be non-empty strings (except impact, which must be exactly one of: High, Medium, Low).\n\nREQUIRED JSON STRUCTURE:\n{\n  \"company\": \"name of the company\",\n  \"summary\": \"1-2 sentence summary of what changed\",\n  \"impact\": \"High\",\n  \"reason\": \"1 sentence explaining why this impact level was chosen\"\n}\n\nIf the input contains no clear update for any company, still return a valid JSON object with your best assessment — never return an empty response, plain text, or apologies."
+        }
+      },
+      "id": "56c31ba9-c296-477d-b40c-dc5d9217099f",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        48,
+        288
+      ],
+      "retryOnFail": true,
+      "waitBetweenTries": 2000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "model": "openrouter/free",
+        "options": {}
+      },
+      "id": "1a977c44-7946-40fa-a15b-e2e2db003e52",
+      "name": "OpenRouter Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        496
+      ],
+      "credentials": {
+        "openRouterApi": {
+          "id": "2VnZNGkYlbrR33j3",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"company\": \"Apple\",\n  \"summary\": \"Launched new iPhone with AI features\",\n  \"impact\": \"High\",\n  \"reason\": \"Major product launch affecting market share\"\n}",
+        "autoFix": true
+      },
+      "id": "f893aaee-8278-49d7-9302-8e8ddc15f2a7",
+      "name": "Structured Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        112,
+        512
+      ]
+    },
+    {
+      "parameters": {
+        "model": "openrouter/free",
+        "options": {}
+      },
+      "id": "94d6163a-9671-4b24-82f5-9afda2ff0f39",
+      "name": "OpenRouter Chat Model2",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        112,
+        672
+      ],
+      "credentials": {
+        "openRouterApi": {
+          "id": "2VnZNGkYlbrR33j3",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1xI6R7v8flXt_hOWehdZNHWVjBkor0yl1oedS0oX_OZA",
+          "mode": "list",
+          "cachedResultName": "competitor IntelligenceDdatabace",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1xI6R7v8flXt_hOWehdZNHWVjBkor0yl1oedS0oX_OZA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1xI6R7v8flXt_hOWehdZNHWVjBkor0yl1oedS0oX_OZA/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Data": "={{ $now }}",
+            "summary": "={{ $json.output.summary }}",
+            "impact": "={{ $json.output.impact }}",
+            "reason": "={{ $json.output.reason }}",
+            "Company": "={{ $json.output.company }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Data",
+              "displayName": "Data",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Company",
+              "displayName": "Company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "summary",
+              "displayName": "summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "impact",
+              "displayName": "impact",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "reason",
+              "displayName": "reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "alert",
+              "displayName": "alert",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "output",
+              "displayName": "output",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "23a6963e-8307-4b71-ab23-5f3b9df13d47",
+      "name": "Append row in sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        496,
+        272
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Ais2550GRDpSSw0m",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Here is the analysis to evaluate:\n\nCompany: {{ $json.Company }}\nSummary: {{ $json.summary }}\nImpact: {{ $json.impact }}\nReason: {{ $json.reason }}\n\nReturn the structured JSON as instructed.",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are an alert decision system.\n\nYou will receive an analysis of a competitor update, including company, summary, impact, and reason.\n\nTASK:\nDecide whether this update is significant enough to trigger an alert. Set alert to true only if impact is \"High\". Otherwise set alert to false.\n\nOUTPUT RULES (follow exactly):\n1. Return ONLY a single JSON object. Nothing else.\n2. Do NOT include markdown code fences (no ``` symbols).\n3. Do NOT include any explanation, commentary, greeting, or text before or after the JSON.\n4. Do NOT return an array. Return exactly ONE object.\n5. The response must start with the character { and end with the character }.\n6. All fields are required. \"alert\" must be a literal boolean true or false, not the string \"true\"/\"false\".\n\nREQUIRED JSON STRUCTURE:\n{\n  \"company\": \"name of the company\",\n  \"impact\": \"High\",\n  \"alert\": true,\n  \"message\": \"short 1-sentence alert message suitable for email or Telegram, or an empty string if alert is false\"\n}\n\nNever omit a field. Never return plain text. Never wrap the JSON in explanation."
+        }
+      },
+      "id": "6330f12b-3405-4341-8f4c-56fc618a1379",
+      "name": "AI Agent1",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        768,
+        272
+      ],
+      "retryOnFail": true,
+      "waitBetweenTries": 2000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "model": "openrouter/free",
+        "options": {}
+      },
+      "id": "f03095ac-65dc-4a63-bdf0-5e699022ab09",
+      "name": "OpenRouter Chat Model1",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        672,
+        416
+      ],
+      "credentials": {
+        "openRouterApi": {
+          "id": "2VnZNGkYlbrR33j3",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"company\": \"Apple\",\n  \"impact\": \"High\",\n  \"alert\": true,\n  \"message\": \"Apple launched a major new product — competitive threat\"\n}",
+        "autoFix": true
+      },
+      "id": "6f5d8852-7866-47c9-b704-ad3c8e2765c8",
+      "name": "Structured Output Parser1",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        832,
+        512
+      ]
+    },
+    {
+      "parameters": {
+        "model": "openrouter/free",
+        "options": {}
+      },
+      "id": "c7bbccf8-865f-4bef-92e3-41dc3a466035",
+      "name": "OpenRouter Chat Model3",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        832,
+        656
+      ],
+      "credentials": {
+        "openRouterApi": {
+          "id": "2VnZNGkYlbrR33j3",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "517f3452-f759-4da5-8ab9-d8d1228bbbef",
+              "leftValue": "={{ $json.output.alert }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "0e8def9b-57db-4ca9-8321-8d4130b067be",
+      "name": "If",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1216,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "kishuki1208@gmail.com",
+        "subject": "🚨 Competitor Intelligence Alert",
+        "emailType": "text",
+        "message": "=New Competitor Update Detected  Company: {{ $json.output.company }}  Impact: {{ $json.output.impact }}  Message: {{ $json.output.message }}  Summary: {{ $('AI Agent').item.json.output.summary }}  Reason: {{ $('AI Agent').item.json.output.reason }}  Generated by Autonomous Competitor Intelligence Radar",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "3da22cce-e630-444f-814a-57d1bc7af605",
+      "name": "Send a message",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1344,
+        416
+      ],
+      "webhookId": "fb32e053-c2c4-40da-a633-34237d74e799",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "bSBf5cZY8esba0qw",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c5bc0b3d-f8ea-49fb-91e7-e41cd76359f1",
+              "name": "company",
+              "value": "unknown",
+              "type": "string"
+            },
+            {
+              "id": "b31417a4-e233-4033-a1b3-7bc417ffd622",
+              "name": "summary",
+              "value": "AI parsing failed-manual review needed",
+              "type": "string"
+            },
+            {
+              "id": "98a0be9d-44c4-49e9-b38b-01a9344b2dd5",
+              "name": "impact",
+              "value": "Low",
+              "type": "string"
+            },
+            {
+              "id": "44970924-e2ff-4c37-8bf5-845dc6b46ded",
+              "name": "reason",
+              "value": "output error",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        336,
+        384
+      ],
+      "id": "d4fe1b95-bb9e-46e2-aea6-de32acdf6bdc",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8646d6c6-ac56-433b-bccc-ae49372fdbb7",
+              "name": "company",
+              "value": "Unknow",
+              "type": "string"
+            },
+            {
+              "id": "cc260ce6-b437-4900-baad-cb7826d9cefc",
+              "name": "impact",
+              "value": "Low",
+              "type": "string"
+            },
+            {
+              "id": "38882707-2ca1-487f-8f50-a77c11a005fc",
+              "name": "alert",
+              "value": false,
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1072,
+        352
+      ],
+      "id": "775b295f-1f5b-4145-b40d-4c57426f2e62",
+      "name": "Edit Fields1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Company A",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Company B",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Company C",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Company A": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Company B": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Company C": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Structured Output Parser",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Structured Output Parser1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "bb485791-c315-4497-93e8-d472340cbb56",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e690c05e5262a51f2eb4e853e80ebf3b918b5c58d439257fac018a54b937e424"
+  },
+  "nodeGroups": [],
+  "id": "J0hMWhNrJIg4WBP2",
+  "tags": []
+}
